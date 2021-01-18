@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Microsoft.Azure.Management.ApiManagement.Models;
 using Azure.Identity;
 using Microsoft.Rest;
+using System.Web;
 
 namespace ApiChat.Web.Auth.Pages
 {
@@ -77,7 +78,19 @@ namespace ApiChat.Web.Auth.Pages
 
             var tokenResult = await apiManagement.User.GetSharedAccessTokenAsync(_resourceGroupName, _serviceName, userId, new UserTokenParameters() { Expiry = DateTime.UtcNow.AddHours(3), KeyType = KeyType.Primary });
 
-            return Redirect($"{_ssoUrl}?token={tokenResult.Value}&returnUrl={returnUrl}");
+
+            var parameters = HttpUtility.ParseQueryString(string.Empty);
+            parameters["token"] = tokenResult.Value;
+            parameters["returnUrl"] = returnUrl;
+            var urlBuider = new UriBuilder
+            {
+                Host = _ssoUrl,
+                Scheme = "https",
+                Path = "signin-sso",
+                Query = parameters.ToString()
+            };
+
+            return Redirect(urlBuider.Uri.ToString());
         }
     }
 }

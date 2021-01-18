@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Azure.Management.ApiManagement;
 using RestSharp;
+using System.Web;
 
 namespace ApiChat.Web.Auth.Pages
 {
@@ -47,16 +48,24 @@ namespace ApiChat.Web.Auth.Pages
         {
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
             var returnUrl = Request.Query["returnUrl"].FirstOrDefault();
-#if !DEBUG
+
             if (!TryValidation(returnUrl))
             {
                 return Unauthorized();
             }
-#endif
+
             switch (operation)
             {
                 case Operations.SignIn:
-                    var returnUrlAfterSignIn = $"https://{Request.Host.Value}/SignInDelegation?{SignInDelegationModel.RequestQueryRedirectUrl}={returnUrl}";
+                    var parameters = HttpUtility.ParseQueryString(string.Empty);
+                    parameters[SignInDelegationModel.RequestQueryRedirectUrl] = returnUrl;
+                    var urlBuider = new UriBuilder("https", Request.Host.Host, (int)Request.Host.Port)
+                    {
+                        Path = "SignInDelegation",
+                        Query = parameters.ToString()
+                    };
+
+                    var returnUrlAfterSignIn = urlBuider.Uri.ToString();
                     return Redirect($"/MicrosoftIdentity/Account/Challenge?redirectUri={returnUrlAfterSignIn}");
                 case Operations.ChangePassword:
                     break;
