@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Azure.Management.ApiManagement;
+using RestSharp;
 
 namespace ApiChat.Web.Auth.Pages
 {
@@ -38,7 +40,7 @@ namespace ApiChat.Web.Auth.Pages
 
         public ApimDelegationModel(IConfiguration configuration)
         {
-            _key = configuration["Delegation:DelegationValidationKey"];
+            _key = configuration["ApiManagement:DelegationValidationKey"];
         }
 
         public IActionResult OnGet()
@@ -51,11 +53,11 @@ namespace ApiChat.Web.Auth.Pages
                 return Unauthorized();
             }
 #endif
-            
             switch (operation)
             {
                 case Operations.SignIn:
-                    return Redirect($"/MicrosoftIdentity/Account/Challenge?redirectUri={returnUrl}");
+                    var returnUrlAfterSignIn = $"https://{Request.Host.Value}/SignInDelegation?{SignInDelegationModel.RequestQueryRedirectUrl}={returnUrl}";
+                    return Redirect($"/MicrosoftIdentity/Account/Challenge?redirectUri={returnUrlAfterSignIn}");
                 case Operations.ChangePassword:
                     break;
                 case Operations.ChangeProfile:
