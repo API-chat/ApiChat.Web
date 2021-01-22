@@ -68,13 +68,13 @@ namespace ApiChat.Web.Auth.Pages
                     var returnUrlAfterSignIn = urlBuider.Uri.ToString();
                     return Redirect($"/MicrosoftIdentity/Account/Challenge?redirectUri={returnUrlAfterSignIn}");
                 case Operations.ChangePassword:
-                    break;
+                    return Redirect($"/MicrosoftIdentity/Account/ResetPassword");
                 case Operations.ChangeProfile:
-                    break;
+                    return Redirect($"/MicrosoftIdentity/Account/EditProfile");
                 case Operations.CloseAccount:
                     break;
                 case Operations.SignOut:
-                    break;
+                    return Redirect($"/MicrosoftIdentity/Account/SignOut");
                 case Operations.Subscribe:
                     break;
                 case Operations.Unsubscribe:
