@@ -13,7 +13,7 @@ namespace ApiChat.Web.Auth.Pages
     public class SignInDelegationModel : PageModel
     {
         public const string RequestQueryRedirectUrl = "redirectHostUri";
-        private const string NameIdentifierSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+        public const string NameIdentifierSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
         private const string GivenNameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
         private const string SurnameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
         private const string EMailAddress = "emails";

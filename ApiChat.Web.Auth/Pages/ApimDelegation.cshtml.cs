@@ -66,6 +66,7 @@ namespace ApiChat.Web.Auth.Pages
                 case Operations.SignIn:
                     var parameters = HttpUtility.ParseQueryString(string.Empty);
                     parameters[SignInDelegationModel.RequestQueryRedirectUrl] = returnUrl;
+                   
                     var urlBuider = new UriBuilder("https", Request.Host.Host, (int)Request.Host.Port)
                     {
                         Path = "SignInDelegation",
@@ -93,7 +94,7 @@ namespace ApiChat.Web.Auth.Pages
                     var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
                     if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
                     var user = await _paddleService.GetSubscriptionUsers(subscriptionId);
-                    return operation == Operations.Unsubscribe ? Redirect(user.CancelUrl) : Redirect(user.UpdateUrl);
+                    return operation == Operations.Unsubscribe ? Redirect(user.cancel_url) : Redirect(user.update_url);
                 default:
                     return Page();
             }

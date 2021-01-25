@@ -34,7 +34,7 @@ function OpenPaddle(ProductId, UserId, ProductName) {
 
         @if (Model.ProductId != 0) {
             @:SetupPaddle(@Model.VendorPaddle);
-            @:OpenPaddle(@Model.ProductId, @Model.UserId, @Model.Product);
+            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product');
         }
     </script>
 

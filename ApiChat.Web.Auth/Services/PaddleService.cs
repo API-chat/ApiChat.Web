@@ -35,7 +35,7 @@ namespace ApiChat.Web.Auth.Services
             if (response.IsSuccessful)
             {
                 var user = JsonConvert.DeserializeObject<PaddleResponse>(response.Content);
-                return user.Response;
+                return user.Response.First();
             }
 
             return null;

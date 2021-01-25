@@ -40,7 +40,7 @@ namespace ApiChat.Web.Auth.Pages
                 return Unauthorized();
             }
 #endif      
-            UserId = Request.Query["userId"].FirstOrDefault();
+            UserId = HttpContext.User.FindFirst(SignInDelegationModel.NameIdentifierSchemas).Value;
             if (string.IsNullOrWhiteSpace(UserId)) return Unauthorized();
 
             Product = Request.Query["productId"].FirstOrDefault();

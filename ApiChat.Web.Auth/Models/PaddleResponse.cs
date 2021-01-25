@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ApiChat.Web.Auth.Models
 {
@@ -7,58 +8,58 @@ namespace ApiChat.Web.Auth.Models
         [JsonPropertyName("success")]
         public bool Success { get; set; }
         [JsonPropertyName("response")]
-        public PaddleWebhookResponse Response { get; set; }
+        public List<PaddleWebhookResponse> Response { get; set; }
     }
 
     public class PaddleWebhookResponse
     {
         [JsonPropertyName("subscription_id")]
-        public int SubscribtionId { get; set; }
+        public int subscription_id { get; set; }
         [JsonPropertyName("plan_id")]
-        public int PlanId { get; set; }
+        public int plan_id { get; set; }
         [JsonPropertyName("user_id")]
-        public int UserId { get; set; }
+        public int user_id { get; set; }
         [JsonPropertyName("user_email")]
-        public string UserEmail { get; set; }
+        public string user_email { get; set; }
         [JsonPropertyName("marketing_consent")]
-        public bool MarketingConsent { get; set; }
+        public bool marketing_consent { get; set; }
         [JsonPropertyName("update_url")]
-        public string UpdateUrl { get; set; }
+        public string update_url { get; set; }
         [JsonPropertyName("cancel_url")]
-        public string CancelUrl { get; set; }
+        public string cancel_url { get; set; }
         [JsonPropertyName("state")]
-        public string State { get; set; }
+        public string state { get; set; }
         [JsonPropertyName("signup_date")]
-        public string SignUpDate { get; set; }
+        public string signup_date { get; set; }
         [JsonPropertyName("quantity")]
-        public int Quantity { get; set; }
+        public int quantity { get; set; }
         [JsonPropertyName("last_payment")]
-        public Payment LastPayment { get; set; }
+        public Payment last_payment { get; set; }
         [JsonPropertyName("payment_information")]
-        public PaymentInformation PaymentInformation { get; set; }
+        public PaymentInformation payment_information { get; set; }
         [JsonPropertyName("next_payment")]
-        public Payment NextPayment { get; set; }
+        public Payment next_payment { get; set; }
     }
 
     public class PaymentInformation
     {
         [JsonPropertyName("payment_method")]
-        public string PaymentMethod { get; set; }
+        public string payment_method { get; set; }
         [JsonPropertyName("card_type")]
-        public string CardType { get; set; }
+        public string card_type { get; set; }
         [JsonPropertyName("last_four_digits")]
-        public string LastFourDigits { get; set; }
+        public string last_four_digits { get; set; }
         [JsonPropertyName("expiry_date")]
-        public string ExpiryDate { get; set; }
+        public string expiry_date { get; set; }
     }
 
     public class Payment
     {
         [JsonPropertyName("amount")]
-        public int Amount { get; set; }
+        public int amount { get; set; }
         [JsonPropertyName("currency")]
-        public string Currency { get; set; }
+        public string currency { get; set; }
         [JsonPropertyName("date")]
-        public string Date { get; set; }
+        public string date { get; set; }
     }
 }
