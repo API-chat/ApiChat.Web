@@ -34,12 +34,11 @@ namespace ApiChat.Web.Auth.Pages
         {
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
 
-#if !DEBUG
             if (TryProductValidation())
             {
                 return Unauthorized();
             }
-#endif      
+  
             UserId = HttpContext.User.FindFirst(SignInDelegationModel.NameIdentifierSchemas).Value;
             if (string.IsNullOrWhiteSpace(UserId)) return Unauthorized();
 

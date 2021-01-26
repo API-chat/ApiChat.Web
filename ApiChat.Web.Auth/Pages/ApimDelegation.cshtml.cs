@@ -19,6 +19,9 @@ namespace ApiChat.Web.Auth.Pages
         private readonly IValidationService _validationService;
         private readonly IPaddleService _paddleService;
 
+        public string RedirectUrl { get; private set; }
+        public bool Unavailable { get; private set; }
+
         public enum Operations
         {
             SignIn,
@@ -90,15 +93,18 @@ namespace ApiChat.Web.Auth.Pages
                     };
                     return Redirect(urlPaddle.Uri.ToString());
                 case Operations.Unsubscribe:
-                case Operations.Renew:
                     var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
                     if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
                     var user = await _paddleService.GetSubscriptionUsers(subscriptionId);
-                    return operation == Operations.Unsubscribe ? Redirect(user.cancel_url) : Redirect(user.update_url);
+                    return Redirect(user.cancel_url);
+                case Operations.Renew:
+                    break;
                 default:
-                    return Page();
+                    break;
             }
 
+            RedirectUrl = returnUrl ?? "https://developers.api.chat/";
+            Unavailable = true;
             return Page();
         }
     }
