@@ -10,14 +10,19 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Azure.Management.ApiManagement;
 using RestSharp;
 using System.Web;
+using ApiChat.Web.Auth.Services;
 
 namespace ApiChat.Web.Auth.Pages
 {
     public class ApimDelegationModel : PageModel
     {
-        private string _key;
+        private readonly IValidationService _validationService;
+        private readonly IPaddleService _paddleService;
 
-        enum Operations
+        public string RedirectUrl { get; private set; }
+        public bool Unavailable { get; private set; }
+
+        public enum Operations
         {
             SignIn,
             ChangePassword,
@@ -36,35 +41,40 @@ namespace ApiChat.Web.Auth.Pages
             /// <summary>
             /// a request to renew a subscription(for example, that may be expiring)
             /// </summary>
-            Renew 
+            Renew
+
         }
 
-        public ApimDelegationModel(IConfiguration configuration)
+        public ApimDelegationModel(IValidationService validationService, IPaddleService paddleService)
         {
-            _key = configuration["ApiManagement:DelegationValidationKey"];
+            _validationService = validationService;
+            _paddleService = paddleService;
         }
 
-        public IActionResult OnGet()
+        public async Task<IActionResult> OnGet()
         {
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
             var returnUrl = Request.Query["returnUrl"].FirstOrDefault();
 
-            if (!TryValidation(returnUrl))
+            if (!new List<Operations> { Operations.Subscribe, Operations.Unsubscribe, Operations.Renew }.Contains(operation))
             {
-                return Unauthorized();
-            }
+                if (!_validationService.TryValidation(Request, returnUrl))
+                {
+                    return Unauthorized();
+                }
+            }            
 
             switch (operation)
             {
                 case Operations.SignIn:
                     var parameters = HttpUtility.ParseQueryString(string.Empty);
                     parameters[SignInDelegationModel.RequestQueryRedirectUrl] = returnUrl;
+                   
                     var urlBuider = new UriBuilder("https", Request.Host.Host, (int)Request.Host.Port)
                     {
                         Path = "SignInDelegation",
                         Query = parameters.ToString()
                     };
-
                     var returnUrlAfterSignIn = urlBuider.Uri.ToString();
                     return Redirect($"/MicrosoftIdentity/Account/Challenge?redirectUri={returnUrlAfterSignIn}");
                 case Operations.ChangePassword:
@@ -76,29 +86,26 @@ namespace ApiChat.Web.Auth.Pages
                 case Operations.SignOut:
                     return Redirect($"/MicrosoftIdentity/Account/SignOut");
                 case Operations.Subscribe:
-                    break;
+                    var urlPaddle = new UriBuilder("https", Request.Host.Host, (int)Request.Host.Port)
+                    {
+                        Path = "PaddlePay",
+                        Query = Request.QueryString.Value
+                    };
+                    return Redirect(urlPaddle.Uri.ToString());
                 case Operations.Unsubscribe:
-                    break;
+                    var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
+                    if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
+                    var user = await _paddleService.GetSubscriptionUsers(subscriptionId);
+                    return Redirect(user.cancel_url);
                 case Operations.Renew:
                     break;
                 default:
                     break;
             }
 
+            RedirectUrl = returnUrl ?? "https://developers.api.chat/";
+            Unavailable = true;
             return Page();
-        }
-
-        private bool TryValidation(string returnUrl)
-        {
-            string salt = Request.Query["salt"].FirstOrDefault();
-            string sig = Request.Query["sig"].FirstOrDefault();
-            string signature;
-            using var encoder = new HMACSHA512(Convert.FromBase64String(_key));
-
-            signature = Convert.ToBase64String(encoder.ComputeHash(Encoding.UTF8.GetBytes(salt + "\n" + returnUrl)));
-            // change to (salt + "\n" + productId + "\n" + userId) when delegating product subscription
-            // compare signature to sig query parameter
-            return string.Equals(signature, sig, StringComparison.Ordinal);
         }
     }
 }

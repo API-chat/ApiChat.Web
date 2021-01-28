@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Logging;
+using ApiChat.Web.Auth.Services;
 
 namespace ApiChat.Web.Auth
 {
@@ -37,6 +38,11 @@ namespace ApiChat.Web.Auth
                 .AddMicrosoftIdentityWebApp(Configuration.GetSection("AzureAdB2C"));
             services.AddRazorPages()
                 .AddMicrosoftIdentityUI();
+
+            services.AddScoped<IClientCredentialService, ClientCredentialService>();
+            services.AddScoped<IApiManagementService, ApiManagementService>();
+            services.AddScoped<IValidationService, ValidationService>();
+            services.AddScoped<IPaddleService, PaddleService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
