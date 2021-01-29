@@ -20,10 +20,10 @@ namespace ApiChat.Web.Auth.Pages
         private const string NewUser = "newUser";
 
         private readonly string _ssoUrl;
-        private readonly ClientCredentialService _clientCredentialService;
+        private readonly IClientCredentialService _clientCredentialService;
         private readonly IApiManagementService _apiManagementService;
 
-        public SignInDelegationModel(IConfiguration configuration, ClientCredentialService clientCredentialService, IApiManagementService apiManagementService)
+        public SignInDelegationModel(IConfiguration configuration, IClientCredentialService clientCredentialService, IApiManagementService apiManagementService)
         {
             _ssoUrl = configuration["ApiManagement:SSOUrl"];
 
@@ -44,22 +44,22 @@ namespace ApiChat.Web.Auth.Pages
             var token = await _clientCredentialService.GetAccessTokenAsync();
 
             var userId = HttpContext.User.FindFirst(NameIdentifierSchemas).Value;
-            var isNew = HttpContext.User.FindFirst(NewUser).Value;
+            var isNew = HttpContext.User.FindFirst(NewUser)?.Value;
 
             if (bool.TryParse(isNew, out var result))
             {
                 if (result)
                 {
                     var email = HttpContext.User.FindFirst(EMailAddress)?.Value;
-                    var firstName = HttpContext.User.FindFirst(GivenNameSchemas)?.Value;
-                    var lastName = HttpContext.User.FindFirst(SurnameSchemas)?.Value;
+                    var firstName = HttpContext.User.FindFirst(GivenNameSchemas)?.Value ?? string.Empty;
+                    var lastName = HttpContext.User.FindFirst(SurnameSchemas)?.Value ?? string.Empty;
                     // Create corresponding account in API Management
-                    await _apiManagementService.UserCreateOrUpdateAsync(token.Token, userId, new UserCreateParameters(email, firstName, lastName));
+                    await _apiManagementService.UserCreateOrUpdateAsync(token.Token, userId, new UserCreateParameters(email, firstName, lastName,
+                        appType: "developerPortal", confirmation: "signup")); // we do not need invites - so let's skip invite email
                 }
             }
 
             var tokenResult = await _apiManagementService.GetSharedAccessTokenAsync(token.Token, userId, new UserTokenParameters() { Expiry = DateTime.UtcNow.AddHours(3), KeyType = KeyType.Primary });
-
 
             var parameters = HttpUtility.ParseQueryString(string.Empty);
             parameters["token"] = tokenResult.Value;
