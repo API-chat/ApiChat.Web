@@ -1,22 +1,24 @@
 ﻿@page
 @model ApiChat.Web.Auth.Pages.PaddlePayModel
-
+@{ 
+    Layout = "_LayoutBack";
+}
 
 <div class="checkout-container"></div>
 
 @{
 }
-    <script type="text/javascript">
+<script type="text/javascript">
         function SetupPaddle(VendorPaddle) {
     Paddle.Setup({
         vendor: VendorPaddle
     });
 }
 
-function OpenPaddle(ProductId, UserId, ProductName) {
+function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl) {
     Paddle.Checkout.open({
         method: 'inline',
-        product: ProductId,    
+        product: ProductId,
         passthrough: UserId + ':' + ProductName,
         allowQuantity: false,
         disableLogout: true,
@@ -24,6 +26,7 @@ function OpenPaddle(ProductId, UserId, ProductName) {
             var checkoutId = data.checkout.id;
             Paddle.Order.details(checkoutId, function (data) {
                 console.log(data);
+                window.location.href = SuccessUrl; // hack
             });
         },
         frameTarget: 'checkout-container', // The className of your checkout <div>
@@ -34,7 +37,7 @@ function OpenPaddle(ProductId, UserId, ProductName) {
 
         @if (Model.ProductId != 0) {
             @:SetupPaddle(@Model.VendorPaddle);
-            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product');
+            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product','@Model.ProfileUrl');
         }
-    </script>
+</script>
 

@@ -20,21 +20,31 @@ namespace ApiChat.Web.Auth.Pages
         public int ProductId { get; private set; }
         public string UserId { get; private set; }
         public string Product { get; private set; }
+        public string ProfileUrl { get; set; }
 
-        public static Dictionary<string, int> Products = new Dictionary<string, int> { { "Business", 631425 }, { "Personal", 631424 }, { "Free", 631423 } };
+        public static Dictionary<string, int> Products = new Dictionary<string, int> { 
+            { "business", 631425 }, 
+            { "team", 631424 }, 
+            { "personal", 631423 } };
 
         public PaddlePayModel(IConfiguration configuration, IValidationService validationService)
         {
             _validationService = validationService;
 
             VendorPaddle = configuration["Paddle:Vendor"];
+            var ub = new UriBuilder("https", configuration["ApiManagement:SSOUrl"])
+            {
+                Path = "profile"
+            };
+
+            ProfileUrl = ub.ToString();
         }
 
         public async Task<IActionResult> OnGet()
         {
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
 
-            if (TryProductValidation())
+            if (!TryProductValidation())
             {
                 return Unauthorized();
             }

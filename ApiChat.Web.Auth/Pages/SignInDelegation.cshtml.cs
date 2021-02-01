@@ -51,11 +51,11 @@ namespace ApiChat.Web.Auth.Pages
                 if (result)
                 {
                     var email = HttpContext.User.FindFirst(EMailAddress)?.Value;
-                    var firstName = HttpContext.User.FindFirst(GivenNameSchemas)?.Value ?? string.Empty;
-                    var lastName = HttpContext.User.FindFirst(SurnameSchemas)?.Value ?? string.Empty;
+                    var firstName = HttpContext.User.FindFirst(GivenNameSchemas)?.Value ?? "-";
+                    var lastName = HttpContext.User.FindFirst(SurnameSchemas)?.Value ?? "-";
                     // Create corresponding account in API Management
                     await _apiManagementService.UserCreateOrUpdateAsync(token.Token, userId, new UserCreateParameters(email, firstName, lastName,
-                        appType: "developerPortal", confirmation: "signup")); // we do not need invites - so let's skip invite email
+                       confirmation: "signup")); // we do not need invites - so let's skip invite email
                 }
             }
 
