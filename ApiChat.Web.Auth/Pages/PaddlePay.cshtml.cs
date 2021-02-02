@@ -20,6 +20,7 @@ namespace ApiChat.Web.Auth.Pages
         public int ProductId { get; private set; }
         public string UserId { get; private set; }
         public string Product { get; private set; }
+        public string Email { get; set; }
 
         public static Dictionary<string, int> Products = new Dictionary<string, int> { { "Business", 631425 }, { "Personal", 631424 }, { "Free", 631423 } };
 
@@ -46,6 +47,8 @@ namespace ApiChat.Web.Auth.Pages
             if (string.IsNullOrWhiteSpace(Product)) return BadRequest(Product);
             ProductId = Products[Product];
             if (ProductId == 0) return BadRequest(Product);
+
+            Email = HttpContext.User.FindFirst(SignInDelegationModel.EMailAddress)?.Value;
 
             return Page();
         }

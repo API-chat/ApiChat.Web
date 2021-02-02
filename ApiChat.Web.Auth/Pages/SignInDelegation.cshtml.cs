@@ -7,6 +7,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Azure.Management.ApiManagement.Models;
 using System.Web;
 using ApiChat.Web.Auth.Services;
+using RestSharp;
+using Newtonsoft.Json;
+using ApiChat.Web.Auth.Models;
+using System.Collections.Generic;
 
 namespace ApiChat.Web.Auth.Pages
 {
@@ -16,8 +20,14 @@ namespace ApiChat.Web.Auth.Pages
         public const string NameIdentifierSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
         private const string GivenNameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
         private const string SurnameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
-        private const string EMailAddress = "emails";
+        private const string IdentitySchemas = "http://schemas.microsoft.com/identity/claims/identityprovider";
+        public const string EMailAddress = "emails";
         private const string NewUser = "newUser";
+
+        private const string IdpAccessToken = "idp_access_token";
+        private const string ClaimsGitHub = "github.com";
+
+        private const string GitHubApiForEmail = "https://api.github.com/user/emails";
 
         private readonly string _ssoUrl;
         private readonly IClientCredentialService _clientCredentialService;
@@ -50,7 +60,25 @@ namespace ApiChat.Web.Auth.Pages
             {
                 if (result)
                 {
+                    var provider = HttpContext.User.FindFirst(IdentitySchemas)?.Value;
+
                     var email = HttpContext.User.FindFirst(EMailAddress)?.Value;
+
+                    if (string.Equals(provider, ClaimsGitHub))
+                    {
+                        var accessToken = HttpContext.User.FindFirst(IdpAccessToken)?.Value;
+                        var client = new RestClient(GitHubApiForEmail);
+                        var request = new RestRequest(Method.GET);
+                        request.AddHeader("Authorization", $"Basic {Base64Encode("xakpc:" + accessToken)}");
+                        var gitResult = await client.ExecuteAsync(request);
+
+                        if (gitResult.IsSuccessful)
+                        {
+                            var emails = JsonConvert.DeserializeObject<List<EmailGitHub>>(gitResult.Content);
+                            email = emails.First(o => o.primary == true).email;
+                        }
+                    }
+
                     var firstName = HttpContext.User.FindFirst(GivenNameSchemas)?.Value ?? string.Empty;
                     var lastName = HttpContext.User.FindFirst(SurnameSchemas)?.Value ?? string.Empty;
                     // Create corresponding account in API Management
@@ -73,6 +101,12 @@ namespace ApiChat.Web.Auth.Pages
             };
 
             return Redirect(urlBuider.Uri.ToString());
+        }
+
+        public static string Base64Encode(string plainText)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+            return System.Convert.ToBase64String(plainTextBytes);
         }
     }
 }

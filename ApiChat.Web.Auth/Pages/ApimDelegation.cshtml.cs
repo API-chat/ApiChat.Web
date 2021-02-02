@@ -24,6 +24,7 @@ namespace ApiChat.Web.Auth.Pages
 
         public enum Operations
         {
+            SignUp,
             SignIn,
             ChangePassword,
             ChangeProfile,
@@ -66,6 +67,7 @@ namespace ApiChat.Web.Auth.Pages
 
             switch (operation)
             {
+                case Operations.SignUp:
                 case Operations.SignIn:
                     var parameters = HttpUtility.ParseQueryString(string.Empty);
                     parameters[SignInDelegationModel.RequestQueryRedirectUrl] = returnUrl;
@@ -96,6 +98,7 @@ namespace ApiChat.Web.Auth.Pages
                     var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
                     if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
                     var user = await _paddleService.GetSubscriptionUsers(subscriptionId);
+                    if (user == null) return BadRequest(subscriptionId);
                     return Redirect(user.cancel_url);
                 case Operations.Renew:
                     break;
