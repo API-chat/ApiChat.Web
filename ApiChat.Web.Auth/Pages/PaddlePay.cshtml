@@ -15,10 +15,11 @@
     });
 }
 
-function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl) {
+function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email) {
     Paddle.Checkout.open({
         method: 'inline',
         product: ProductId,
+        email: Email,
         passthrough: UserId + ':' + ProductName,
         allowQuantity: false,
         disableLogout: true,
@@ -37,7 +38,7 @@ function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl) {
 
         @if (Model.ProductId != 0) {
             @:SetupPaddle(@Model.VendorPaddle);
-            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product','@Model.ProfileUrl');
+            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product','@Model.ProfileUrl', '@Model.Email');
         }
 </script>
 

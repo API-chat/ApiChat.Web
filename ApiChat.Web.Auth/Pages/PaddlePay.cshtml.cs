@@ -21,6 +21,7 @@ namespace ApiChat.Web.Auth.Pages
         public string UserId { get; private set; }
         public string Product { get; private set; }
         public string ProfileUrl { get; set; }
+        public string Email { get; set; }
 
         public static Dictionary<string, int> Products = new Dictionary<string, int> { 
             { "business", 631425 }, 
@@ -40,7 +41,7 @@ namespace ApiChat.Web.Auth.Pages
             ProfileUrl = ub.ToString();
         }
 
-        public async Task<IActionResult> OnGet()
+        public IActionResult OnGet()
         {
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
 
@@ -56,6 +57,8 @@ namespace ApiChat.Web.Auth.Pages
             if (string.IsNullOrWhiteSpace(Product)) return BadRequest(Product);
             ProductId = Products[Product];
             if (ProductId == 0) return BadRequest(Product);
+
+            Email = HttpContext.User.FindFirst(SignInDelegationModel.EMailAddress)?.Value;
 
             return Page();
         }
