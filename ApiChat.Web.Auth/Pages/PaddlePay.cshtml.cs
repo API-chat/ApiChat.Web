@@ -41,7 +41,7 @@ namespace ApiChat.Web.Auth.Pages
             ProfileUrl = ub.ToString();
         }
 
-        public async Task<IActionResult> OnGet()
+        public IActionResult OnGet()
         {
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
 

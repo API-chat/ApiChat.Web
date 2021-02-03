@@ -13,23 +13,20 @@ namespace ApiChat.Web.Auth.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
         public string AadB2CInstance { get; }
         public string AamProfile { get; }
         private readonly IApiManagementService _apiManagementService;
         private readonly IClientCredentialService _clientCredentialService;
 
-        public IndexModel(ILogger<IndexModel> logger, IConfiguration configuration, IClientCredentialService clientCredentialService, IApiManagementService apiManagementService)
+        public IndexModel(IConfiguration configuration, IClientCredentialService clientCredentialService, IApiManagementService apiManagementService)
         {
-            _logger = logger;
-
             AadB2CInstance = configuration["AzureAdB2C:Instance"];
             AamProfile = configuration["ApiManagement:ProfileUrl"];
             _clientCredentialService = clientCredentialService;
             _apiManagementService = apiManagementService;
         }
 
-        public IActionResult OnGet()
+        public async Task<IActionResult> OnGet()
         {
             var firstName = HttpContext.User.FindFirst(SignInDelegationModel.GivenNameSchemas)?.Value ?? string.Empty;
             var lastName = HttpContext.User.FindFirst(SignInDelegationModel.SurnameSchemas)?.Value ?? string.Empty;
