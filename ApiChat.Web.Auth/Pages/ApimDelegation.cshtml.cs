@@ -54,10 +54,16 @@ namespace ApiChat.Web.Auth.Pages
 
         public async Task<IActionResult> OnGet()
         {
+            static bool IsOneOf(Operations enumeration, params Operations[] enums)
+            {
+                return enums.Contains(enumeration);
+            };
+
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
             var returnUrl = Request.Query["returnUrl"].FirstOrDefault();
 
-            if (!new List<Operations> { Operations.Subscribe, Operations.Unsubscribe, Operations.Renew }.Contains(operation))
+            if (!IsOneOf(operation, Operations.Subscribe, Operations.Unsubscribe, Operations.Renew,
+                                    Operations.ChangePassword, Operations.ChangeProfile, Operations.SignOut, Operations.CloseAccount)) // temporary disable validation
             {
                 if (!_validationService.TryValidation(Request, returnUrl))
                 {

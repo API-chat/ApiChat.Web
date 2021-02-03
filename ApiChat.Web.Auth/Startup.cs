@@ -15,6 +15,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Logging;
 using ApiChat.Web.Auth.Services;
+using DalSoft.Hosting.BackgroundQueue.DependencyInjection;
+using System.Diagnostics;
 
 namespace ApiChat.Web.Auth
 {
@@ -43,6 +45,12 @@ namespace ApiChat.Web.Auth
             services.AddScoped<IApiManagementService, ApiManagementService>();
             services.AddScoped<IValidationService, ValidationService>();
             services.AddScoped<IPaddleService, PaddleService>();
+
+            services.AddBackgroundQueue(maxConcurrentCount: 1, millisecondsToWaitBeforePickingUpTask: 1000,
+                onException: exception =>
+                {
+                    Trace.TraceError(exception.ToString());
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

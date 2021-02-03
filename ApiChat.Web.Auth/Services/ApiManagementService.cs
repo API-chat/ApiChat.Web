@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,12 +25,21 @@ namespace ApiChat.Web.Auth.Services
 
         public async Task UserCreateOrUpdateAsync(string token, string userId, UserCreateParameters parameters)
         {
-            var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+            try
             {
-                SubscriptionId = _subscriptionId
-            };
+                var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+                {
+                    SubscriptionId = _subscriptionId
+                };
 
-            await apiManagement.User.CreateOrUpdateAsync(_resourceGroupName, _serviceName, userId, parameters);
+                await apiManagement.User.CreateOrUpdateAsync(_resourceGroupName, _serviceName, userId, parameters);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceInformation(ex.ToString());
+                throw;
+            }
+            
         }
 
         public async Task UserUpdateAsync(string token, string userId, UserUpdateParameters parameters)
@@ -54,12 +64,20 @@ namespace ApiChat.Web.Auth.Services
 
         public async Task SubscribtionCreateOrUpdateAsync(string token, string sid, SubscriptionCreateParameters parameters)
         {
-            var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+            try
             {
-                SubscriptionId = _subscriptionId
-            };
+                var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+                {
+                    SubscriptionId = _subscriptionId
+                };
 
-            await apiManagement.Subscription.CreateOrUpdateAsync(_resourceGroupName, _serviceName, sid, parameters);
+                await apiManagement.Subscription.CreateOrUpdateAsync(_resourceGroupName, _serviceName, sid, parameters);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceInformation(ex.ToString());
+                throw;
+            }
         }
     }
 
