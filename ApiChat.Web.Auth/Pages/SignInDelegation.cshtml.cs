@@ -18,8 +18,8 @@ namespace ApiChat.Web.Auth.Pages
     {
         public const string RequestQueryRedirectUrl = "redirectHostUri";
         public const string NameIdentifierSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
-        private const string GivenNameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
-        private const string SurnameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
+        public const string GivenNameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
+        public const string SurnameSchemas = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
         private const string IdentitySchemas = "http://schemas.microsoft.com/identity/claims/identityprovider";
         public const string EMailAddress = "emails";
         private const string NewUser = "newUser";
@@ -53,7 +53,7 @@ namespace ApiChat.Web.Auth.Pages
 
             var token = await _clientCredentialService.GetAccessTokenAsync();
 
-            var userId = HttpContext.User.FindFirst(NameIdentifierSchemas).Value;
+            var userId = HttpContext.User.FindFirst(NameIdentifierSchemas)?.Value;
             var isNew = HttpContext.User.FindFirst(NewUser)?.Value;
 
             if (bool.TryParse(isNew, out var result))
@@ -66,17 +66,7 @@ namespace ApiChat.Web.Auth.Pages
 
                     if (string.Equals(provider, ClaimsGitHub))
                     {
-                        var accessToken = HttpContext.User.FindFirst(IdpAccessToken)?.Value;
-                        var client = new RestClient(GitHubApiForEmail);
-                        var request = new RestRequest(Method.GET);
-                        request.AddHeader("Authorization", $"Basic {Base64Encode("xakpc:" + accessToken)}");
-                        var gitResult = await client.ExecuteAsync(request);
-
-                        if (gitResult.IsSuccessful)
-                        {
-                            var emails = JsonConvert.DeserializeObject<List<EmailGitHub>>(gitResult.Content);
-                            email = emails.First(o => o.primary == true).email;
-                        }
+                        email = await FindGitHubEmail(email);
                     }
 
                     var firstName = HttpContext.User.FindFirst(GivenNameSchemas)?.Value ?? string.Empty;
@@ -103,7 +93,24 @@ namespace ApiChat.Web.Auth.Pages
             return Redirect(urlBuider.Uri.ToString());
         }
 
-        public static string Base64Encode(string plainText)
+        private async Task<string> FindGitHubEmail(string email)
+        {
+            var accessToken = HttpContext.User.FindFirst(IdpAccessToken)?.Value;
+            var client = new RestClient(GitHubApiForEmail);
+            var request = new RestRequest(Method.GET);
+            request.AddHeader("Authorization", $"Basic {Base64Encode("xakpc:" + accessToken)}");
+            var gitResult = await client.ExecuteAsync(request);
+
+            if (gitResult.IsSuccessful)
+            {
+                var emails = JsonConvert.DeserializeObject<List<EmailGitHub>>(gitResult.Content);
+                email = emails.First(o => o.primary == true).email;
+            }
+
+            return email;
+        }
+
+        private static string Base64Encode(string plainText)
         {
             var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
             return System.Convert.ToBase64String(plainTextBytes);
