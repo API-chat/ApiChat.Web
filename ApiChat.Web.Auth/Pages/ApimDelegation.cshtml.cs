@@ -62,16 +62,33 @@ namespace ApiChat.Web.Auth.Pages
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
             var returnUrl = Request.Query["returnUrl"].FirstOrDefault();
 
-            if (!IsOneOf(operation, Operations.Subscribe, Operations.Unsubscribe, Operations.Renew,
-                                    Operations.ChangePassword, Operations.ChangeProfile, Operations.SignOut, Operations.CloseAccount)) // temporary disable validation
+            if (IsOneOf(operation, Operations.ChangePassword, Operations.ChangeProfile, Operations.SignOut, Operations.CloseAccount))
+            {
+                var userId = HttpContext.User.FindFirst(SignInDelegationModel.NameIdentifierSchemas)?.Value;
+                if (userId != null && !_validationService.TryValidation(Request, userId))
+                {
+                    return Unauthorized();
+                }
+            }
+
+            if (IsOneOf(operation, Operations.SignIn, Operations.SignUp))
             {
                 if (!_validationService.TryValidation(Request, returnUrl))
                 {
                     return Unauthorized();
                 }
-            }            
+            }
 
-            switch (operation)
+            if (IsOneOf(operation, Operations.Renew, Operations.Unsubscribe))
+            {
+                var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
+                var userId = Request.Query["userId"].FirstOrDefault();
+                if (!_validationService.TryValidation(Request, subscriptionId + "\n" + userId)){
+                    return BadRequest();
+                }
+            }
+
+                switch (operation)
             {
                 case Operations.SignUp:
                 case Operations.SignIn:

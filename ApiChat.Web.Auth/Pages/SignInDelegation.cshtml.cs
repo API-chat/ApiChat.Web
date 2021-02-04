@@ -93,7 +93,7 @@ namespace ApiChat.Web.Auth.Pages
             return Redirect(urlBuider.Uri.ToString());
         }
 
-        private async Task<string> FindGitHubEmail(string email)
+        public async Task<string> FindGitHubEmail(string email)
         {
             var accessToken = HttpContext.User.FindFirst(IdpAccessToken)?.Value;
             var client = new RestClient(GitHubApiForEmail);

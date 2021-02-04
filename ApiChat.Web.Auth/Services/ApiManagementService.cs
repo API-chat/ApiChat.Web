@@ -79,10 +79,21 @@ namespace ApiChat.Web.Auth.Services
                 throw;
             }
         }
+
+        public async Task<UserContract> GetUser(string token, string userId)
+        {
+            var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+            {
+                SubscriptionId = _subscriptionId
+            };
+
+            return await apiManagement.User.GetAsync(_resourceGroupName, _serviceName, userId);
+        }
     }
 
     public interface IApiManagementService
     {
+        Task<UserContract> GetUser(string token, string userId);
         Task UserCreateOrUpdateAsync(string token, string userId, UserCreateParameters parameters);
         Task UserUpdateAsync(string token, string userId, UserUpdateParameters parameters);
         Task<UserTokenResult> GetSharedAccessTokenAsync(string token, string userId, UserTokenParameters parameters);

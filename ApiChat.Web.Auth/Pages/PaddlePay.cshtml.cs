@@ -65,7 +65,7 @@ namespace ApiChat.Web.Auth.Pages
 
         private bool TryProductValidation()
         {
-            var productId = Request.Query["productId"].FirstOrDefault() ?? Request.Query["subscriptionId"].FirstOrDefault();
+            var productId = Request.Query["productId"].FirstOrDefault();
             var userId = Request.Query["userId"].FirstOrDefault();
             return _validationService.TryValidation(Request, productId + "\n" + userId);
         }
