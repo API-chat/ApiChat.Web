@@ -28,6 +28,7 @@ namespace ApiChat.Web.Auth.Pages
         private const string GitHubApiForEmail = "https://api.github.com/user/emails";
 
         private readonly string _ssoUrl;
+
         private readonly IContextService _contextService;
         private readonly IApiManagementService _apiManagementService;
 
@@ -36,6 +37,7 @@ namespace ApiChat.Web.Auth.Pages
             _ssoUrl = configuration["ApiManagement:SSOUrl"];
 
             _contextService = contextService;
+
             _apiManagementService = apiManagementService;
         }
 

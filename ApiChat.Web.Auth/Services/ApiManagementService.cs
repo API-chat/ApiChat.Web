@@ -3,9 +3,7 @@ using Microsoft.Azure.Management.ApiManagement.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ApiChat.Web.Auth.Services
@@ -22,6 +20,7 @@ namespace ApiChat.Web.Auth.Services
             _subscriptionId = configuration["ApiManagement:SubscriptionId"];
             _resourceGroupName = configuration["ApiManagement:ResourceGroupName"];
             _serviceName = configuration["ApiManagement:ServiceName"];
+
             _tokenProvider = tokenProvider;
         }
 
@@ -42,7 +41,6 @@ namespace ApiChat.Web.Auth.Services
                 Trace.TraceInformation(ex.ToString());
                 throw;
             }
-            
         }
 
         public async Task UserUpdateAsync(string userId, UserUpdateParameters parameters)
@@ -81,8 +79,8 @@ namespace ApiChat.Web.Auth.Services
 
             return await apiManagement.User.GetSharedAccessTokenAsync(_resourceGroupName, _serviceName, userId, parameters);
         }
-
-        public async Task SubscribtionCreateOrUpdateAsync( string sid, SubscriptionCreateParameters parameters)
+        
+        public async Task SubscribtionCreateOrUpdateAsync(string sid, SubscriptionCreateParameters parameters)
         {
             try
             {
