@@ -1,6 +1,6 @@
 ﻿@page
 @model ApiChat.Web.Auth.Pages.PaddlePayModel
-@{ 
+@{
     Layout = "_LayoutBack";
 }
 
@@ -13,12 +13,13 @@
     Paddle.Setup({
         vendor: VendorPaddle
     });
-}
+    }
 
-    function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email) {
+    function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email, Region) {
         Paddle.Checkout.open({
             product: ProductId,
             email: Email,
+            country: Region,
             passthrough: UserId + ':' + ProductName,
             allowQuantity: false,
             disableLogout: true,
@@ -30,9 +31,23 @@
         });
     }
 
-        @if (Model.ProductId != 0) {
+    function OpenCancelPaddle(CancelUrl) {
+        Paddle.Checkout.open({
+            override: CancelUrl,
+            success: "https://developers.api.chat"
+        })
+    }
+
+    @if (string.IsNullOrEmpty(Model.CancelUrl))
+    {
             @:SetupPaddle(@Model.VendorPaddle);
-            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product','@Model.ProfileUrl', '@Model.Email');
-        }
+            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product', '@Model.ProfileUrl', '@Model.Email', '@Model.Region');
+    }
+    else
+    { 
+            @:SetupPaddle(@Model.VendorPaddle);
+            @:OpenCancelPaddle('@Model.CancelUrl');
+    }
+
 </script>
 

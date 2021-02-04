@@ -17,7 +17,6 @@ namespace ApiChat.Web.Auth.Pages
     public class ApimDelegationModel : PageModel
     {
         private readonly IValidationService _validationService;
-        private readonly IPaddleService _paddleService;
 
         public string RedirectUrl { get; private set; }
         public bool Unavailable { get; private set; }
@@ -46,10 +45,9 @@ namespace ApiChat.Web.Auth.Pages
 
         }
 
-        public ApimDelegationModel(IValidationService validationService, IPaddleService paddleService)
+        public ApimDelegationModel(IValidationService validationService)
         {
             _validationService = validationService;
-            _paddleService = paddleService;
         }
 
         public async Task<IActionResult> OnGet()
@@ -62,16 +60,33 @@ namespace ApiChat.Web.Auth.Pages
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
             var returnUrl = Request.Query["returnUrl"].FirstOrDefault();
 
-            if (!IsOneOf(operation, Operations.Subscribe, Operations.Unsubscribe, Operations.Renew,
-                                    Operations.ChangePassword, Operations.ChangeProfile, Operations.SignOut, Operations.CloseAccount)) // temporary disable validation
+            if (IsOneOf(operation, Operations.ChangePassword, Operations.ChangeProfile, Operations.SignOut, Operations.CloseAccount))
+            {
+                var userId = HttpContext.User.FindFirst(SignInDelegationModel.NameIdentifierSchemas)?.Value;
+                if (userId != null && !_validationService.TryValidation(Request, userId))
+                {
+                    return Unauthorized();
+                }
+            }
+
+            if (IsOneOf(operation, Operations.SignIn, Operations.SignUp))
             {
                 if (!_validationService.TryValidation(Request, returnUrl))
                 {
                     return Unauthorized();
                 }
-            }            
+            }
 
-            switch (operation)
+            if (IsOneOf(operation, Operations.Renew, Operations.Unsubscribe))
+            {
+                var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
+                var userId = Request.Query["userId"].FirstOrDefault();
+                if (!_validationService.TryValidation(Request, subscriptionId + "\n" + userId)){
+                    return BadRequest();
+                }
+            }
+
+                switch (operation)
             {
                 case Operations.SignUp:
                 case Operations.SignIn:
@@ -94,18 +109,13 @@ namespace ApiChat.Web.Auth.Pages
                 case Operations.SignOut:
                     return Redirect($"/MicrosoftIdentity/Account/SignOut");
                 case Operations.Subscribe:
+                case Operations.Unsubscribe:
                     var urlPaddle = new UriBuilder("https", Request.Host.Host, (int)Request.Host.Port)
                     {
                         Path = "PaddlePay",
                         Query = Request.QueryString.Value
                     };
-                    return Redirect(urlPaddle.Uri.ToString());
-                case Operations.Unsubscribe:
-                    var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
-                    if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
-                    var user = await _paddleService.GetSubscriptionUsers(subscriptionId);
-                    if (user == null) return BadRequest(subscriptionId);
-                    return Redirect(user.cancel_url);
+                    return Redirect(urlPaddle.Uri.ToString());                    
                 case Operations.Renew:
                     break;
                 default:

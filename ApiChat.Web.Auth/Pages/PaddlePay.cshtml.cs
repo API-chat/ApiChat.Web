@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,6 +16,8 @@ namespace ApiChat.Web.Auth.Pages
     public class PaddlePayModel : PageModel
     {
         private readonly IValidationService _validationService;
+        private readonly IApiManagementService _apiManagementService;
+        private readonly IPaddleService _paddleService;
 
         public string VendorPaddle { get; }
         public int ProductId { get; private set; }
@@ -22,15 +25,20 @@ namespace ApiChat.Web.Auth.Pages
         public string Product { get; private set; }
         public string ProfileUrl { get; set; }
         public string Email { get; set; }
+        public string Region { get; private set; }
+
+        public string CancelUrl { get; private set; }
 
         public static Dictionary<string, int> Products = new Dictionary<string, int> { 
             { "business", 631425 }, 
             { "team", 631424 }, 
             { "personal", 631423 } };
 
-        public PaddlePayModel(IConfiguration configuration, IValidationService validationService)
+        public PaddlePayModel(IConfiguration configuration, IApiManagementService apiManagementService, IValidationService validationService, IPaddleService paddleService)
         {
             _validationService = validationService;
+            _apiManagementService = apiManagementService;
+            _paddleService = paddleService;
 
             VendorPaddle = configuration["Paddle:Vendor"];
             var ub = new UriBuilder("https", configuration["ApiManagement:SSOUrl"])
@@ -42,31 +50,59 @@ namespace ApiChat.Web.Auth.Pages
             ProfileUrl = ub.ToString();
         }
 
-        public IActionResult OnGet()
+        public async Task<IActionResult> OnGet()
         {
             var operation = Enum.Parse<Operations>(Request.Query["operation"].FirstOrDefault());
 
-            if (!TryProductValidation())
+            if(operation == Operations.Unsubscribe)
             {
-                return Unauthorized();
+                var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
+                var userId = Request.Query["userId"].FirstOrDefault();
+                if (!_validationService.TryValidation(Request, subscriptionId + "\n" + userId))
+                {
+                    return BadRequest();
+                }
+
+                if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
+                var user = await _paddleService.GetSubscriptionUsers(subscriptionId);
+
+                if (user == null) return BadRequest(subscriptionId);
+
+                CancelUrl = user.cancel_url;
             }
-  
-            UserId = HttpContext.User.FindFirst(SignInDelegationModel.NameIdentifierSchemas).Value;
-            if (string.IsNullOrWhiteSpace(UserId)) return Unauthorized();
 
-            Product = Request.Query["productId"].FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(Product)) return BadRequest(Product);
-            ProductId = Products[Product];
-            if (ProductId == 0) return BadRequest(Product);
+            if (operation == Operations.Subscribe)
+            {
 
-            Email = HttpContext.User.FindFirst(SignInDelegationModel.EMailAddress)?.Value;
+                if (!TryProductValidation())
+                {
+                    return Unauthorized();
+                }
 
+                UserId = HttpContext.User.FindFirst(SignInDelegationModel.NameIdentifierSchemas).Value;
+                if (string.IsNullOrWhiteSpace(UserId)) return Unauthorized();
+
+                Product = Request.Query["productId"].FirstOrDefault();
+                if (string.IsNullOrWhiteSpace(Product)) return BadRequest(Product);
+                ProductId = Products[Product];
+                if (ProductId == 0) return BadRequest(Product);
+
+                var user = await _apiManagementService.GetUser(UserId);
+                Email = user.Email;
+
+                var country = HttpContext.User.FindFirst("country")?.Value;
+                if (country != null)
+                {
+                    var regions = CultureInfo.GetCultures(CultureTypes.SpecificCultures).Select(x => new RegionInfo(x.LCID));
+                    Region = regions.FirstOrDefault(region => region.EnglishName.Contains(country))?.TwoLetterISORegionName;
+                }
+            }
             return Page();
         }
 
         private bool TryProductValidation()
         {
-            var productId = Request.Query["productId"].FirstOrDefault() ?? Request.Query["subscriptionId"].FirstOrDefault();
+            var productId = Request.Query["productId"].FirstOrDefault();
             var userId = Request.Query["userId"].FirstOrDefault();
             return _validationService.TryValidation(Request, productId + "\n" + userId);
         }

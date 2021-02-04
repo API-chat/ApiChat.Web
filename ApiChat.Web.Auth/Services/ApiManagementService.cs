@@ -51,7 +51,6 @@ namespace ApiChat.Web.Auth.Services
                 {
                     parameters.FirstName = "-";
                 }
-
                 if (string.IsNullOrEmpty(parameters.LastName))
                 {
                     parameters.LastName = "-";
@@ -80,7 +79,7 @@ namespace ApiChat.Web.Auth.Services
 
             return await apiManagement.User.GetSharedAccessTokenAsync(_resourceGroupName, _serviceName, userId, parameters);
         }
-
+        
         public async Task SubscribtionCreateOrUpdateAsync(string sid, SubscriptionCreateParameters parameters)
         {
             try
@@ -98,10 +97,21 @@ namespace ApiChat.Web.Auth.Services
                 throw;
             }
         }
+
+        public async Task<UserContract> GetUser(string userId)
+        {
+            var apiManagement = new ApiManagementClient(new TokenCredentials(_tokenProvider))
+            {
+                SubscriptionId = _subscriptionId
+            };
+
+            return await apiManagement.User.GetAsync(_resourceGroupName, _serviceName, userId);
+        }
     }
 
     public interface IApiManagementService
     {
+        Task<UserContract> GetUser(string userId);
         Task UserCreateOrUpdateAsync(string userId, UserCreateParameters parameters);
         Task UserUpdateAsync(string userId, UserUpdateParameters parameters);
         Task<UserTokenResult> GetSharedAccessTokenAsync(string userId, UserTokenParameters parameters);

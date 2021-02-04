@@ -44,9 +44,8 @@ namespace ApiChat.Web.Auth
             services.AddScoped<IApiManagementService, ApiManagementService>();
             services.AddScoped<IValidationService, ValidationService>();
             services.AddScoped<IPaddleService, PaddleService>();
-
+            services.AddScoped<IContextService, ContextService>();
             services.AddTransient<ApiManagementTokenProvider>();
-
             services.AddBackgroundQueue(maxConcurrentCount: 1, millisecondsToWaitBeforePickingUpTask: 1000,
                 onException: exception =>
                 {
