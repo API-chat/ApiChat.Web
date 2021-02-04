@@ -16,7 +16,7 @@ namespace ApiChat.Web.Auth.Pages
     public class PaddlePayModel : PageModel
     {
         private readonly IValidationService _validationService;
-        private readonly IContextService _contextService;
+        private readonly IApiManagementService _apiManagementService;
         private readonly IPaddleService _paddleService;
 
         public string VendorPaddle { get; }
@@ -34,10 +34,10 @@ namespace ApiChat.Web.Auth.Pages
             { "team", 631424 }, 
             { "personal", 631423 } };
 
-        public PaddlePayModel(IConfiguration configuration, IContextService contextService, IValidationService validationService, IPaddleService paddleService)
+        public PaddlePayModel(IConfiguration configuration, IApiManagementService apiManagementService, IValidationService validationService, IPaddleService paddleService)
         {
             _validationService = validationService;
-            _contextService = contextService;
+            _apiManagementService = apiManagementService;
             _paddleService = paddleService;
 
             VendorPaddle = configuration["Paddle:Vendor"];
@@ -87,7 +87,8 @@ namespace ApiChat.Web.Auth.Pages
                 ProductId = Products[Product];
                 if (ProductId == 0) return BadRequest(Product);
 
-                Email = await _contextService.GetEmailUser(HttpContext);
+                var user = await _apiManagementService.GetUser(UserId);
+                Email = user.Email;
 
                 var country = HttpContext.User.FindFirst("country")?.Value;
                 if (country != null)
