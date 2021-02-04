@@ -35,7 +35,8 @@ namespace ApiChat.Web.Auth.Pages
             VendorPaddle = configuration["Paddle:Vendor"];
             var ub = new UriBuilder("https", configuration["ApiManagement:SSOUrl"])
             {
-                Path = "profile"
+                //Path = "profile",
+                //Query = @"r=" + DateTime.Now.Ticks.ToString()
             };
 
             ProfileUrl = ub.ToString();
