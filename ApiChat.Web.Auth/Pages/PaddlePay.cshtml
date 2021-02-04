@@ -15,11 +15,12 @@
     });
 }
 
-function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email) {
+function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email, Region) {
     Paddle.Checkout.open({
         method: 'inline',
         product: ProductId,
         email: Email,
+        countryCode: Region,
         passthrough: UserId + ':' + ProductName,
         allowQuantity: false,
         disableLogout: true,
@@ -38,7 +39,7 @@ function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email) {
 
         @if (Model.ProductId != 0) {
             @:SetupPaddle(@Model.VendorPaddle);
-            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product','@Model.ProfileUrl', '@Model.Email');
+            @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product', '@Model.ProfileUrl', '@Model.Email', '@Model.Region');
         }
 </script>
 
