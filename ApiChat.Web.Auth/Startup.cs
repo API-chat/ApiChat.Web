@@ -41,10 +41,11 @@ namespace ApiChat.Web.Auth
             services.AddRazorPages()
                 .AddMicrosoftIdentityUI();
 
-            services.AddScoped<IClientCredentialService, ClientCredentialService>();
             services.AddScoped<IApiManagementService, ApiManagementService>();
             services.AddScoped<IValidationService, ValidationService>();
             services.AddScoped<IPaddleService, PaddleService>();
+
+            services.AddTransient<ApiManagementTokenProvider>();
 
             services.AddBackgroundQueue(maxConcurrentCount: 1, millisecondsToWaitBeforePickingUpTask: 1000,
                 onException: exception =>
