@@ -1,6 +1,6 @@
 ﻿@page
 @model ApiChat.Web.Auth.Pages.PaddlePayModel
-@{ 
+@{
     Layout = "_LayoutBack";
 }
 
@@ -15,42 +15,38 @@
     });
     }
 
-    @if(string.IsNullOrEmpty(Model.CancelUrl))
-        {
-            @:function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email, Region)
-            @:{
-            @:    Paddle.Checkout.open({
-            @:    product: ProductId,
-            @:email: Email,
-            @:country: Region,
-            @:passthrough: UserId + ':' + ProductName,
-            @:allowQuantity: false,
-            @:disableLogout: true,
-            @:success: SuccessUrl,
-            @:closeCallback: function(data) {
-            @:console.log(data.eventData);
-            @:history.back();
-            @:},
-        @:});
-        @:}
+    function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email, Region) {
+        Paddle.Checkout.open({
+            product: ProductId,
+            email: Email,
+            country: Region,
+            passthrough: UserId + ':' + ProductName,
+            allowQuantity: false,
+            disableLogout: true,
+            success: SuccessUrl,
+            closeCallback: function (data) {
+                console.log(data.eventData);
+                history.back();
+            },
+        });
+    }
 
-    @if (Model.ProductId != 0) {
+    function OpenCancelPaddle(CancelUrl) {
+        Paddle.Checkout.open({
+            override: CancelUrl,
+            success: "https://developers.api.chat"
+        })
+    }
+
+    @if (string.IsNullOrEmpty(Model.CancelUrl))
+    {
             @:SetupPaddle(@Model.VendorPaddle);
             @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product', '@Model.ProfileUrl', '@Model.Email', '@Model.Region');
-        }
-    } else
-    {
-        @:function OpenPaddle(CancelUrl)
-            @:{
-            @:    Paddle.Checkout.open({
-            @: override: CancelUrl,
-            @: success: "https://developers.api.chat"
-            @:})
-            @:}
-
+    }
+    else
+    { 
             @:SetupPaddle(@Model.VendorPaddle);
-            @:OpenPaddle('@Model.CancelUrl');
-        
+            @:OpenCancelPaddle('@Model.CancelUrl');
     }
 
 </script>
