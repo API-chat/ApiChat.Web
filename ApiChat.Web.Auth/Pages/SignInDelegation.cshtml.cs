@@ -29,15 +29,13 @@ namespace ApiChat.Web.Auth.Pages
 
         private readonly string _ssoUrl;
         private readonly IContextService _contextService;
-        private readonly IClientCredentialService _clientCredentialService;
         private readonly IApiManagementService _apiManagementService;
 
-        public SignInDelegationModel(IConfiguration configuration, IContextService contextService, IClientCredentialService clientCredentialService, IApiManagementService apiManagementService)
+        public SignInDelegationModel(IConfiguration configuration, IContextService contextService, IApiManagementService apiManagementService)
         {
             _ssoUrl = configuration["ApiManagement:SSOUrl"];
 
             _contextService = contextService;
-            _clientCredentialService = clientCredentialService;
             _apiManagementService = apiManagementService;
         }
 
@@ -51,8 +49,6 @@ namespace ApiChat.Web.Auth.Pages
                 return Unauthorized();
             }
 
-            var token = await _clientCredentialService.GetAccessTokenAsync();
-
             var userId = HttpContext.User.FindFirst(NameIdentifierSchemas)?.Value;
             var isNew = HttpContext.User.FindFirst(NewUser)?.Value;
 
@@ -65,12 +61,12 @@ namespace ApiChat.Web.Auth.Pages
                     var firstName = HttpContext.User.FindFirst(GivenNameSchemas)?.Value ?? "-";
                     var lastName = HttpContext.User.FindFirst(SurnameSchemas)?.Value ?? "-";
                     // Create corresponding account in API Management
-                    await _apiManagementService.UserCreateOrUpdateAsync(token.Token, userId, new UserCreateParameters(email, firstName, lastName,
+                    await _apiManagementService.UserCreateOrUpdateAsync(userId, new UserCreateParameters(email, firstName, lastName,
                        confirmation: "signup")); // we do not need invites - so let's skip invite email
                 }
             }
 
-            var tokenResult = await _apiManagementService.GetSharedAccessTokenAsync(token.Token, userId, new UserTokenParameters() { Expiry = DateTime.UtcNow.AddHours(3), KeyType = KeyType.Primary });
+            var tokenResult = await _apiManagementService.GetSharedAccessTokenAsync(userId, new UserTokenParameters() { Expiry = DateTime.UtcNow.AddHours(3), KeyType = KeyType.Primary });
 
             var parameters = HttpUtility.ParseQueryString(string.Empty);
             parameters["token"] = tokenResult.Value;

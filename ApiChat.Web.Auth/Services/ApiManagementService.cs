@@ -15,23 +15,26 @@ namespace ApiChat.Web.Auth.Services
         private readonly string _subscriptionId;
         private readonly string _resourceGroupName;
         private readonly string _serviceName;
+        private readonly ITokenProvider _tokenProvider;
 
-        public ApiManagementService(IConfiguration configuration)
+        public ApiManagementService(IConfiguration configuration, ApiManagementTokenProvider tokenProvider)
         {
             _subscriptionId = configuration["ApiManagement:SubscriptionId"];
             _resourceGroupName = configuration["ApiManagement:ResourceGroupName"];
             _serviceName = configuration["ApiManagement:ServiceName"];
+            _tokenProvider = tokenProvider;
         }
 
-        public async Task UserCreateOrUpdateAsync(string token, string userId, UserCreateParameters parameters)
+        public async Task UserCreateOrUpdateAsync(string userId, UserCreateParameters parameters)
         {
             try
             {
-                var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+                var apiManagement = new ApiManagementClient(new TokenCredentials(_tokenProvider))
                 {
                     SubscriptionId = _subscriptionId
                 };
 
+                parameters.AppType = "developerPortal";
                 await apiManagement.User.CreateOrUpdateAsync(_resourceGroupName, _serviceName, userId, parameters);
             }
             catch (Exception ex)
@@ -42,36 +45,25 @@ namespace ApiChat.Web.Auth.Services
             
         }
 
-        public async Task UserUpdateAsync(string token, string userId, UserUpdateParameters parameters)
-        {
-            var apiManagement = new ApiManagementClient(new TokenCredentials(token))
-            {
-                SubscriptionId = _subscriptionId
-            };
-
-            await apiManagement.User.UpdateAsync(_resourceGroupName, _serviceName, userId, parameters, "*");
-        }
-
-        public async Task<UserTokenResult> GetSharedAccessTokenAsync(string token, string userId, UserTokenParameters parameters)
-        {
-            var apiManagement = new ApiManagementClient(new TokenCredentials(token))
-            {
-                SubscriptionId = _subscriptionId
-            };
-
-            return await apiManagement.User.GetSharedAccessTokenAsync(_resourceGroupName, _serviceName, userId, parameters);
-        }
-
-        public async Task SubscribtionCreateOrUpdateAsync(string token, string sid, SubscriptionCreateParameters parameters)
+        public async Task UserUpdateAsync(string userId, UserUpdateParameters parameters)
         {
             try
             {
-                var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+                if (string.IsNullOrEmpty(parameters.FirstName))
+                {
+                    parameters.FirstName = "-";
+                }
+                if (string.IsNullOrEmpty(parameters.LastName))
+                {
+                    parameters.LastName = "-";
+                }
+
+                var apiManagement = new ApiManagementClient(new TokenCredentials(_tokenProvider))
                 {
                     SubscriptionId = _subscriptionId
                 };
 
-                await apiManagement.Subscription.CreateOrUpdateAsync(_resourceGroupName, _serviceName, sid, parameters);
+                await apiManagement.User.UpdateAsync(_resourceGroupName, _serviceName, userId, parameters, "*");
             }
             catch (Exception ex)
             {
@@ -80,9 +72,37 @@ namespace ApiChat.Web.Auth.Services
             }
         }
 
-        public async Task<UserContract> GetUser(string token, string userId)
+        public async Task<UserTokenResult> GetSharedAccessTokenAsync(string userId, UserTokenParameters parameters)
         {
-            var apiManagement = new ApiManagementClient(new TokenCredentials(token))
+            var apiManagement = new ApiManagementClient(new TokenCredentials(_tokenProvider))
+            {
+                SubscriptionId = _subscriptionId
+            };
+
+            return await apiManagement.User.GetSharedAccessTokenAsync(_resourceGroupName, _serviceName, userId, parameters);
+        }
+
+        public async Task SubscribtionCreateOrUpdateAsync( string sid, SubscriptionCreateParameters parameters)
+        {
+            try
+            {
+                var apiManagement = new ApiManagementClient(new TokenCredentials(_tokenProvider))
+                {
+                    SubscriptionId = _subscriptionId
+                };
+
+                await apiManagement.Subscription.CreateOrUpdateAsync(_resourceGroupName, _serviceName, sid, parameters, true);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceInformation(ex.ToString());
+                throw;
+            }
+        }
+
+        public async Task<UserContract> GetUser(string userId)
+        {
+            var apiManagement = new ApiManagementClient(new TokenCredentials(_tokenProvider))
             {
                 SubscriptionId = _subscriptionId
             };
@@ -93,10 +113,10 @@ namespace ApiChat.Web.Auth.Services
 
     public interface IApiManagementService
     {
-        Task<UserContract> GetUser(string token, string userId);
-        Task UserCreateOrUpdateAsync(string token, string userId, UserCreateParameters parameters);
-        Task UserUpdateAsync(string token, string userId, UserUpdateParameters parameters);
-        Task<UserTokenResult> GetSharedAccessTokenAsync(string token, string userId, UserTokenParameters parameters);
-        Task SubscribtionCreateOrUpdateAsync(string token, string sid, SubscriptionCreateParameters parameters);
+        Task<UserContract> GetUser(string userId);
+        Task UserCreateOrUpdateAsync(string userId, UserCreateParameters parameters);
+        Task UserUpdateAsync(string userId, UserUpdateParameters parameters);
+        Task<UserTokenResult> GetSharedAccessTokenAsync(string userId, UserTokenParameters parameters);
+        Task SubscribtionCreateOrUpdateAsync(string sid, SubscriptionCreateParameters parameters);
     }
 }

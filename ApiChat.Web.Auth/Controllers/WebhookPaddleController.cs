@@ -15,13 +15,11 @@ namespace ApiChat.Web.Auth.Controllers
     public class WebhookPaddleController : ControllerBase
     {
         private readonly IApiManagementService _apiManagementService;
-        private readonly IClientCredentialService _clientCredentialService;
         private readonly BackgroundQueue _backgroundQueue;
 
-        public WebhookPaddleController(IApiManagementService apiManagementService, IClientCredentialService clientCredentialService, BackgroundQueue backgroundQueue)
+        public WebhookPaddleController(IApiManagementService apiManagementService, BackgroundQueue backgroundQueue)
         {
             _apiManagementService = apiManagementService;
-            _clientCredentialService = clientCredentialService;
             _backgroundQueue = backgroundQueue;
         }
 
@@ -96,8 +94,6 @@ namespace ApiChat.Web.Auth.Controllers
             if (string.IsNullOrWhiteSpace(userId)) return BadRequest(userId);
             if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
 
-            var token = await _clientCredentialService.GetAccessTokenAsync();
-
             var parameters = new SubscriptionCreateParameters()
             {
                 DisplayName = subscriptionId,
@@ -106,7 +102,7 @@ namespace ApiChat.Web.Auth.Controllers
                 State = state
             };
 
-            await _apiManagementService.SubscribtionCreateOrUpdateAsync(token.Token, subscriptionId, parameters);
+            await _apiManagementService.SubscribtionCreateOrUpdateAsync(subscriptionId, parameters);
 
             return Ok();
         }
