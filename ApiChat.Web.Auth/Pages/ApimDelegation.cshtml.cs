@@ -17,7 +17,6 @@ namespace ApiChat.Web.Auth.Pages
     public class ApimDelegationModel : PageModel
     {
         private readonly IValidationService _validationService;
-        private readonly IPaddleService _paddleService;
 
         public string RedirectUrl { get; private set; }
         public bool Unavailable { get; private set; }
@@ -46,10 +45,9 @@ namespace ApiChat.Web.Auth.Pages
 
         }
 
-        public ApimDelegationModel(IValidationService validationService, IPaddleService paddleService)
+        public ApimDelegationModel(IValidationService validationService)
         {
             _validationService = validationService;
-            _paddleService = paddleService;
         }
 
         public async Task<IActionResult> OnGet()
@@ -111,18 +109,13 @@ namespace ApiChat.Web.Auth.Pages
                 case Operations.SignOut:
                     return Redirect($"/MicrosoftIdentity/Account/SignOut");
                 case Operations.Subscribe:
+                case Operations.Unsubscribe:
                     var urlPaddle = new UriBuilder("https", Request.Host.Host, (int)Request.Host.Port)
                     {
                         Path = "PaddlePay",
                         Query = Request.QueryString.Value
                     };
-                    return Redirect(urlPaddle.Uri.ToString());
-                case Operations.Unsubscribe:
-                    var subscriptionId = Request.Query["subscriptionId"].FirstOrDefault();
-                    if (string.IsNullOrWhiteSpace(subscriptionId)) return BadRequest(subscriptionId);
-                    var user = await _paddleService.GetSubscriptionUsers(subscriptionId);
-                    if (user == null) return BadRequest(subscriptionId);
-                    return Redirect(user.cancel_url);
+                    return Redirect(urlPaddle.Uri.ToString());                    
                 case Operations.Renew:
                     break;
                 default:

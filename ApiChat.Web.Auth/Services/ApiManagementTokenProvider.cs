@@ -46,3 +46,4 @@ namespace ApiChat.Web.Auth.Services
             return new AuthenticationHeaderValue("Bearer", authenticationResult.AccessToken);
         }
     }
+}

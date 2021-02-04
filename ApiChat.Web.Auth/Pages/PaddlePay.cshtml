@@ -15,25 +15,43 @@
     });
     }
 
-    function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email, Region) {
-        Paddle.Checkout.open({
-            product: ProductId,
-            email: Email,
-            countryCode: Region,
-            passthrough: UserId + ':' + ProductName,
-            allowQuantity: false,
-            disableLogout: true,
-            success: SuccessUrl,
-            closeCallback: function (data) {
-                console.log(data.eventData);
-                history.back();
-            },
-        });
-    }
+    @if(string.IsNullOrEmpty(Model.CancelUrl))
+        {
+            @:function OpenPaddle(ProductId, UserId, ProductName, SuccessUrl, Email, Region)
+            @:{
+            @:    Paddle.Checkout.open({
+            @:    product: ProductId,
+            @:email: Email,
+            @:country: Region,
+            @:passthrough: UserId + ':' + ProductName,
+            @:allowQuantity: false,
+            @:disableLogout: true,
+            @:success: SuccessUrl,
+            @:closeCallback: function(data) {
+            @:console.log(data.eventData);
+            @:history.back();
+            @:},
+        @:});
+        @:}
 
-        @if (Model.ProductId != 0) {
+    @if (Model.ProductId != 0) {
             @:SetupPaddle(@Model.VendorPaddle);
             @:OpenPaddle(@Model.ProductId, '@Model.UserId', '@Model.Product', '@Model.ProfileUrl', '@Model.Email', '@Model.Region');
         }
+    } else
+    {
+        @:function OpenPaddle(CancelUrl)
+            @:{
+            @:    Paddle.Checkout.open({
+            @: override: CancelUrl,
+            @: success: "https://developers.api.chat"
+            @:})
+            @:}
+
+            @:SetupPaddle(@Model.VendorPaddle);
+            @:OpenPaddle('@Model.CancelUrl');
+        
+    }
+
 </script>
 
